@@ -22,29 +22,29 @@ const MOCK_DATA = [
     name: "Bruschetta Trio",
     description: "Toasted baguette slices topped with tomato-basil, olive tapenade, and roasted garlic mushrooms.",
     price: "9.00",
-    image: "https://images.unsplash.com/photo-1572695157363-bc3195019877?q=80&w=2940&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1506280754576-f6fa8a873550?q=80&w=2787&auto=format&fit=crop",
     type: "VEG",
     calories: "280",
     courseType: "Starters"
   },
   {
     id: 103,
-    name: "Chicken Satay",
-    description: "Grilled chicken skewers marinated in turmeric and lemongrass, served with peanut dip.",
-    price: "11.00",
-    image: "https://images.unsplash.com/photo-1533038676649-16812879baa1?q=80&w=2787&auto=format&fit=crop",
+    name: "Spicy Chicken Wings",
+    description: "Crispy chicken wings tossed in a spicy buffalo sauce, served with ranch dressing.",
+    price: "13.00",
+    image: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?q=80&w=2880&auto=format&fit=crop",
     type: "NV",
-    calories: "320",
+    calories: "550",
     courseType: "Starters"
   },
   {
     id: 104,
-    name: "Stuffed Mushrooms",
-    description: "Baked button mushrooms filled with cream cheese, herbs, and breadcrumbs.",
-    price: "10.50",
-    image: "https://images.unsplash.com/photo-1634526976694-82247c430e66?q=80&w=2835&auto=format&fit=crop",
+    name: "Spring Rolls",
+    description: "Crispy fried rolls stuffed with fresh vegetables and served with sweet chili sauce.",
+    price: "8.50",
+    image: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=2939&auto=format&fit=crop",
     type: "VEG",
-    calories: "210",
+    calories: "250",
     courseType: "Starters"
   },
 
@@ -84,7 +84,7 @@ const MOCK_DATA = [
     name: "Beef Stir Fry",
     description: "Tender beef strips wok-fried with crisp colorful vegetables in a savory ginger soy sauce.",
     price: "21.00",
-    image: "https://images.unsplash.com/photo-1603133872878-684f208fb74b?q=80&w=2850&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=2944&auto=format&fit=crop",
     type: "NV",
     calories: "480",
     courseType: "MAIN COURSE"
@@ -183,11 +183,33 @@ export const MenuProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulating API fetch with local data
-    setTimeout(() => {
-      setDishes(MOCK_DATA);
-      setLoading(false);
-    }, 500); // Small delay to show loading state if needed
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://nkb-backend-ccbp-media-static.s3-ap-south-1.amazonaws.com/ccbp_beta/media/content_loading/uploads/c1613f6a-8178-43b1-82c4-35ededd08ef0_data%20(7).json');
+        const apiData = await response.json();
+        
+        // Normalize API data to match our schema if needed
+        // API has 'mealType', we use 'courseType' in mock (or check both in filter)
+        // API 'image' might be null, provides fallback in UI already.
+        
+        // We'll map API data to ensure consistency
+        const normalizedApiData = apiData.map(item => ({
+             ...item,
+             courseType: item.mealType, // Ensure courseType exists for consistency
+             price: "14.50", // API doesn't seem to have price in the snippet, defaulting
+             image: item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+        }));
+
+        setDishes([...MOCK_DATA, ...normalizedApiData]);
+      } catch (error) {
+        console.error("Failed to fetch API data, falling back to mock only:", error);
+        setDishes(MOCK_DATA);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const addToCart = (dishId) => {
